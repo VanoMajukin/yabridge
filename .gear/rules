@@ -1,0 +1,4 @@
+tar: @version@:.
+spec: .gear/yabridge.spec
+copy: .gear/yabridgectl
+tar: .gear/yabridge-postsubmodules
