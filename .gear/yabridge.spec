@@ -12,6 +12,12 @@ Url: https://github.com/robbert-vdh/yabridge
 Source: %name-%version.tar
 Source1: yabridgectl
 
+# Source2-url: https://github.com/chriskohlhoff/asio/archive/refs/tags/asio-1-22-1.tar.gz
+Source2: asio-1.22.1.tar
+
+# Source3-url: https://github.com/fraillt/bitsery/archive/refs/tags/v5.2.2.tar.gz
+Source3:bitsery-v5.2.2.tar
+
 BuildRequires(pre): rpm-macros-meson
 BuildRequires: meson
 BuildRequires: wine-devel-tools
@@ -19,6 +25,7 @@ BuildRequires: libxcb-devel
 BuildRequires: libdbus-devel
 BuildRequires: /proc
 BuildRequires: cmake
+BuildRequires: git
 
 Requires: wine
 
@@ -26,9 +33,10 @@ Requires: wine
 Yet Another way to use Windows audio plugins on Linux. Yabridge seamlessly supports using both 32-bit and 64-bit Windows VST2, VST3, and CLAP plugins in 64-bit Linux plugin hosts as if they were native plugins, with optional support for plugin groups to enable inter-plugin communication for VST2 plugins and quick startup times. Its modern concurrent architecture and focus on transparency allows yabridge to be both fast and highly compatible, while also staying easy to debug and maintain.
 
 %prep
-%setup
-
+%setup -a2
+# cp -rf subprojects/packagefiles/asio subprojects/
 %build
+
 meson setup build --buildtype=release --cross-file=cross-wine.conf --unity=on --unity-size=4000
 ninja -C build
 
