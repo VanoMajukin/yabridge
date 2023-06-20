@@ -103,11 +103,6 @@ enum VirtualKeyCodes
 	KEY_F17,
 	KEY_F18,
 	KEY_F19,
-	KEY_F20,
-	KEY_F21,
-	KEY_F22,
-	KEY_F23,
-	KEY_F24,
 
 	KEY_SUPER,	// Win-Key on Windows, Ctrl-Key on macOS
 
