@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -587,9 +587,6 @@ TSize FStreamer::writeString8 (const char8* ptr, bool terminate)
 //------------------------------------------------------------------------
 TSize FStreamer::readString8 (char8* ptr, TSize size)
 {
-	if (size < 1 || ptr == nullptr)
-		return 0;
-
 	TSize i = 0;
 	char8 c = 0;
 	while (i < size)
@@ -597,19 +594,18 @@ TSize FStreamer::readString8 (char8* ptr, TSize size)
 		if (readRaw ((void*)&c, sizeof (char)) != sizeof (char))
 			break;
 		ptr[i] = c;
+		i++;
 		if (c == '\n' || c == '\0')
 			break;
-		i++;
 	}
-	// remove at end \n (LF) or \r\n (CR+LF)
-	if (c == '\n')
-	{
-		if (i > 0 && ptr[i - 1] == '\r')
-			i--;
-	}
-	ptr[i] = 0;
+	if (c == '\n' && ptr[i - 2] == '\r')
+		ptr[i - 2] = 0;
+	if (i < size)
+		ptr[i] = 0;
+	else
+		ptr[size - 1] = 0;
 
-	return i;
+	return strlen (ptr);
 }
 
 //------------------------------------------------------------------------
