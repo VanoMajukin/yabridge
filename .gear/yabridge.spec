@@ -33,14 +33,14 @@ Source7: tomlplusplus-v3.3.0.tar
 # Source8-url: https://github.com/robbert-vdh/vst3sdk.git
 Source8: vst3sdk-%version.tar
 
-# Source9-url: https://github.com/steinbergmedia/vst3_base.git
-Source9: vst3_base-%version.tar
+# Source9-url: https://github.com/steinbergmedia/vst3_base/archive/refs/tags/v3.7.7_build_19.tar.gz
+Source9: vst3_base-v3.7.7_build_19.tar
 
-# Source10-url: https://github.com/steinbergmedia/vst3_pluginterfaces.git
-Source10:vst3_pluginterfaces-%version.tar
+# Source10-url: https://github.com/steinbergmedia/vst3_pluginterfaces/archive/refs/tags/v3.7.7_build_19.tar.gz
+Source10:vst3_pluginterfaces-v3.7.7_build_19.tar
 
-# Source11-url: https://github.com/steinbergmedia/vst3_public_sdk.git
-Source11:vst3_public_sdk-%version.tar
+# Source11-url: https://github.com/steinbergmedia/vst3_public_sdk/archive/refs/tags/v3.7.7_build_19.tar.gz
+Source11:vst3_public_sdk-v3.7.7_build_19.tar
 
 BuildRequires(pre): rpm-macros-meson
 BuildRequires: meson
@@ -81,6 +81,9 @@ install libyabridge{,-chainloader}-{vst2,vst3,clap}.so %buildroot/usr/lib
 %_libexecdir/libyabridge-*
 
 %changelog
+* Tue Jun 20 2023 Ivan Mazhukin <vanomj@altlinux.org> 5.0.5-1
+- new version
+
 * Fri Jun 16 2023 Ivan Mazhukin <vanomj@altlinux.org> 5.0.5-alt1
 - Initial build for Sisyphus
 
