@@ -16,7 +16,7 @@ Source1: yabridgectl
 Source2: asio-1.22.1.tar
 
 # Source3-url: https://github.com/fraillt/bitsery/archive/refs/tags/v5.2.2.tar.gz
-Source3:bitsery-v5.2.2.tar
+Source3: bitsery-v5.2.2.tar
 
 BuildRequires(pre): rpm-macros-meson
 BuildRequires: meson
@@ -33,7 +33,7 @@ Requires: wine
 Yet Another way to use Windows audio plugins on Linux. Yabridge seamlessly supports using both 32-bit and 64-bit Windows VST2, VST3, and CLAP plugins in 64-bit Linux plugin hosts as if they were native plugins, with optional support for plugin groups to enable inter-plugin communication for VST2 plugins and quick startup times. Its modern concurrent architecture and focus on transparency allows yabridge to be both fast and highly compatible, while also staying easy to debug and maintain.
 
 %prep
-%setup -a2
+%setup -a2 -a3
 # cp -rf subprojects/packagefiles/asio subprojects/
 %build
 

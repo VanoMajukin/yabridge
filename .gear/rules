@@ -1,5 +1,5 @@
 tar: @version@:.
 spec: .gear/yabridge.spec
 copy: .gear/yabridgectl
-tar: .gear/asio name=asio-1.22.1 base=subprojects/asio/asio
-tar: .gear/bitsery name=bitsery-v5.2.2 base=subprojects/bitsery
+tar: asio name=asio-1.22.1 base=subprojects/asio
+tar: bitsery name=bitsery-v5.2.2 base=subprojects/bitsery
