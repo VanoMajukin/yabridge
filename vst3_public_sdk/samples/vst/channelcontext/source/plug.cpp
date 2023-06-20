@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -39,16 +39,13 @@
 #include "plugparamids.h"
 #include "plugcids.h"	// for class ids
 
-#include "public.sdk/source/vst/vstaudioprocessoralgo.h"
-
-#include "pluginterfaces/base/futils.h"
 #include "pluginterfaces/base/ibstream.h"
-#include "pluginterfaces/vst/ivstevents.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
-
-#include "base/source/fstreamer.h"
+#include "pluginterfaces/vst/ivstevents.h"
+#include "pluginterfaces/base/futils.h"
 
 #include <cstdio>
+#include "base/source/fstreamer.h"
 
 namespace Steinberg {
 namespace Vst {
@@ -86,13 +83,15 @@ tresult PLUGIN_API Plug::initialize (FUnknown* context)
 tresult PLUGIN_API Plug::process (ProcessData& data)
 {
 	//---1) Read inputs parameter changes-----------
-	if (IParameterChanges* paramChanges = data.inputParameterChanges)
+	IParameterChanges* paramChanges = data.inputParameterChanges;
+	if (paramChanges)
 	{
 		int32 numParamsChanged = paramChanges->getParameterCount ();
 		// for each parameter which are some changes in this audio block:
 		for (int32 i = 0; i < numParamsChanged; i++)
 		{
-			if (IParamValueQueue* paramQueue = paramChanges->getParameterData (i))
+			IParamValueQueue* paramQueue = paramChanges->getParameterData (i);
+			if (paramQueue)
 			{
 				int32 offsetSamples;
 				double value;
@@ -127,8 +126,7 @@ tresult PLUGIN_API Plug::process (ProcessData& data)
 	float** in = data.inputs[0].channelBuffers32;
 	float** out = data.outputs[0].channelBuffers32;
 
-	// check if all channel are silent then process silent
-	if (data.inputs[0].silenceFlags == getChannelMask (data.inputs[0].numChannels))
+	if (data.inputs[0].silenceFlags != 0)
 	{
 		// mark output silence too
 		data.outputs[0].silenceFlags = data.inputs[0].silenceFlags;

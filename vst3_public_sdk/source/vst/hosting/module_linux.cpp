@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -43,31 +43,23 @@
 #include <sys/utsname.h>
 #include <unistd.h>
 
-#if SMTG_CPP17
-
+#if (__cplusplus >= 201707L)
 #if __has_include(<filesystem>)
 #define USE_EXPERIMENTAL_FS 0
 #elif __has_include(<experimental/filesystem>)
 #define USE_EXPERIMENTAL_FS 1
 #endif
-
-#else // !SMTG_CPP17
-
+#else
 #define USE_EXPERIMENTAL_FS 1
-
-#endif // SMTG_CPP17
+#endif
 
 #if USE_EXPERIMENTAL_FS == 1
-
 #include <experimental/filesystem>
 namespace filesystem = std::experimental::filesystem;
-
-#else // USE_FILESYSTEM == 0
-
+#else
 #include <filesystem>
 namespace filesystem = std::filesystem;
-
-#endif // USE_FILESYSTEM
+#endif
 
 //------------------------------------------------------------------------
 extern "C" {
@@ -355,9 +347,9 @@ Module::SnapshotList Module::getSnapshots (const std::string& modulePath)
 //------------------------------------------------------------------------
 Optional<std::string> Module::getModuleInfoPath (const std::string& modulePath)
 {
+	SnapshotList result;
 	filesystem::path path (modulePath);
 	path /= "Contents";
-	path /= "Resources";
 	path /= "moduleinfo.json";
 	if (filesystem::exists (path))
 		return {path.generic_string ()};

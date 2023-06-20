@@ -15,14 +15,11 @@ add_library(sdk_common
         source/common/commoniids.cpp
         source/common/openurl.cpp
         source/common/openurl.h
-        source/common/readfile.cpp
-        source/common/readfile.h
         source/common/systemclipboard.h
-        source/common/systemclipboard_linux.cpp
         source/common/systemclipboard_win32.cpp
-        source/common/threadchecker.h
         source/common/threadchecker_linux.cpp
         source/common/threadchecker_win32.cpp
+        source/common/threadchecker.h
         ${VST_COMMON_SRC}
 )
 if(SMTG_MAC)

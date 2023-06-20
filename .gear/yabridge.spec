@@ -49,7 +49,6 @@ BuildRequires: libxcb-devel
 BuildRequires: libdbus-devel
 BuildRequires: /proc
 BuildRequires: cmake
-BuildRequires: git
 
 Requires: wine
 

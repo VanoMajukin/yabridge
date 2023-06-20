@@ -1,5 +1,5 @@
 
-if(SMTG_ENABLE_VST3_HOSTING_EXAMPLES)
+if(SMTG_ADD_VST3_HOSTING_SAMPLES)
 
     set(editorhost_sources
         ${SDK_ROOT}/public.sdk/source/vst/hosting/plugprovider.cpp
@@ -102,4 +102,4 @@ if(SMTG_ENABLE_VST3_HOSTING_EXAMPLES)
                 ${APP_PROPERTIES}
         )
     endif(APP_PROPERTIES)
-endif(SMTG_ENABLE_VST3_HOSTING_EXAMPLES)
+endif(SMTG_ADD_VST3_HOSTING_SAMPLES)

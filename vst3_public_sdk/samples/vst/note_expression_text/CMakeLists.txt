@@ -1,5 +1,5 @@
 
-if(NOT SMTG_ENABLE_VSTGUI_SUPPORT)
+if(NOT SMTG_ADD_VSTGUI)
     return()
 endif()
 

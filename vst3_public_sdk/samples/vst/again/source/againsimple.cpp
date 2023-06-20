@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -42,14 +42,13 @@
 #include "public.sdk/source/main/pluginfactory.h"
 #include "public.sdk/source/vst/vstaudioprocessoralgo.h"
 
+#include "base/source/fstreamer.h"
 #include "pluginterfaces/base/ibstream.h"
 #include "pluginterfaces/base/ustring.h" // for UString128
 #include "pluginterfaces/vst/ivstevents.h"
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 #include "pluginterfaces/vst/vstpresetkeys.h" // for use of IStreamAttributes
-
-#include "base/source/fstreamer.h"
 
 #include "vstgui/plugin-bindings/vst3editor.h"
 
@@ -213,13 +212,15 @@ tresult PLUGIN_API AGainSimple::process (ProcessData& data)
 
 
 	//---1) Read inputs parameter changes-----------
-	if (IParameterChanges* paramChanges = data.inputParameterChanges)
+	IParameterChanges* paramChanges = data.inputParameterChanges;
+	if (paramChanges)
 	{
 		int32 numParamsChanged = paramChanges->getParameterCount ();
 		// for each parameter which are some changes in this audio block:
 		for (int32 i = 0; i < numParamsChanged; i++)
 		{
-			if (IParamValueQueue* paramQueue = paramChanges->getParameterData (i))
+			IParamValueQueue* paramQueue = paramChanges->getParameterData (i);
+			if (paramQueue)
 			{
 				ParamValue value;
 				int32 sampleOffset;
@@ -248,7 +249,8 @@ tresult PLUGIN_API AGainSimple::process (ProcessData& data)
 	}
 	
 	//---2) Read input events-------------
-	if (IEventList* eventList = data.inputEvents) 
+	IEventList* eventList = data.inputEvents;
+	if (eventList) 
 	{
 		int32 numEvent = eventList->getEventCount ();
 		for (int32 i = 0; i < numEvent; i++)
@@ -258,13 +260,13 @@ tresult PLUGIN_API AGainSimple::process (ProcessData& data)
 			{
 				switch (event.type)
 				{
-					//--- -------------------
+					//----------------------
 					case Event::kNoteOnEvent:
 						// use the velocity as gain modifier
 						fGainReduction = event.noteOn.velocity;
 						break;
 					
-					//--- -------------------
+					//----------------------
 					case Event::kNoteOffEvent:
 						// noteOff reset the reduction
 						fGainReduction = 0.f;
@@ -274,111 +276,106 @@ tresult PLUGIN_API AGainSimple::process (ProcessData& data)
 		}
 	}
 		
-	//--- ----------------------------------
+	//-------------------------------------
 	//---3) Process Audio---------------------
-	//--- ----------------------------------
+	//-------------------------------------
 	if (data.numInputs == 0 || data.numOutputs == 0)
 	{
 		// nothing to do
 		return kResultOk;
 	}
 
-	// (simplification) we suppose in this example that we have the same input channel count than
-	// the output
+	// (simplification) we suppose in this example that we have the same input channel count than the output
 	int32 numChannels = data.inputs[0].numChannels;
 
 	//---get audio buffers----------------
 	uint32 sampleFramesSize = getSampleFramesSizeInBytes (processSetup, data.numSamples);
 	void** in = getChannelBuffersPointer (processSetup, data.inputs[0]);
 	void** out = getChannelBuffersPointer (processSetup, data.outputs[0]);
-	float fVuPPM = 0.f;
 
 	//---check if silence---------------
-	// check if all channel are silent then process silent
-	if (data.inputs[0].silenceFlags == getChannelMask (data.inputs[0].numChannels))
+	// normally we have to check each channel (simplification)
+	if (data.inputs[0].silenceFlags != 0)
 	{
 		// mark output silence too
 		data.outputs[0].silenceFlags = data.inputs[0].silenceFlags;
-
-		// the plug-in has to be sure that if it sets the flags silence that the output buffer are
-		// clear
+		
+		// the plug-in has to be sure that if it sets the flags silence that the output buffer are clear
 		for (int32 i = 0; i < numChannels; i++)
 		{
-			// do not need to be cleared if the buffers are the same (in this case input buffer are
-			// already cleared by the host)
+			// do not need to be cleared if the buffers are the same (in this case input buffer are already cleared by the host)
 			if (in[i] != out[i])
-			{
+			{				
 				memset (out[i], 0, sampleFramesSize);
 			}
 		}
-		fVuPPM = 0.f;
+
+		// nothing to do at this point
+		return kResultOk;
+	}
+
+	// mark our outputs has not silent
+	data.outputs[0].silenceFlags = 0;
+
+	//---in bypass mode outputs should be like inputs-----
+	if (bBypass)
+	{
+		for (int32 i = 0; i < numChannels; i++)
+		{
+			// do not need to be copied if the buffers are the same
+			if (in[i] != out[i])
+			{
+				memcpy (out[i], in[i], sampleFramesSize);
+			}
+		}
+		// in this example we do not update the VuMeter in Bypass
 	}
 	else
 	{
-		// mark our outputs has not silent
-		data.outputs[0].silenceFlags = 0;
+		float fVuPPM = 0.f;
 
-		//---in bypass mode outputs should be like inputs-----
-		if (bBypass)
+		//---apply gain factor----------
+		float gain = (fGain - fGainReduction);
+		if (bHalfGain)
+		{
+			gain = gain * 0.5f;
+		}
+		
+		// if the applied gain is nearly zero, we could say that the outputs are zeroed and we set the silence flags. 
+		if (gain < 0.0000001)
 		{
 			for (int32 i = 0; i < numChannels; i++)
 			{
-				// do not need to be copied if the buffers are the same
-				if (in[i] != out[i])
-				{
-					memcpy (out[i], in[i], sampleFramesSize);
-				}
+				memset (out[i], 0, sampleFramesSize);
 			}
-			// in this example we do not update the VuMeter in Bypass
+			data.outputs[0].silenceFlags = (1 << numChannels) - 1;  // this will set to 1 all channels
 		}
 		else
 		{
-			//---apply gain factor----------
-			float gain = (fGain - fGainReduction);
-			if (bHalfGain)
-			{
-				gain = gain * 0.5f;
-			}
-
-			// if the applied gain is nearly zero, we could say that the outputs are zeroed and we set
-			// the silence flags.
-			if (gain < 0.0000001)
-			{
-				for (int32 i = 0; i < numChannels; i++)
-				{
-					memset (out[i], 0, sampleFramesSize);
-				}
-				// this will set to 1 all channels
-				data.outputs[0].silenceFlags = getChannelMask (data.outputs[0].numChannels);
-				fVuPPM = 0.f;
-			}
+			if (data.symbolicSampleSize == kSample32)
+				fVuPPM = processAudio<Sample32> ((Sample32**)in, (Sample32**)out, numChannels,
+				                                 data.numSamples, gain);
 			else
+				fVuPPM = processAudio<Sample64> ((Sample64**)in, (Sample64**)out, numChannels,
+				                                 data.numSamples, gain);
+		}
+
+		//---3) Write outputs parameter changes-----------
+		IParameterChanges* outParamChanges = data.outputParameterChanges;
+		// a new value of VuMeter will be send to the host 
+		// (the host will send it back in sync to our controller for updating our editor)
+		if (outParamChanges && fVuPPMOld != fVuPPM)
+		{
+			int32 index = 0;
+			IParamValueQueue* paramQueue = outParamChanges->addParameterData (kVuPPMId, index);
+			if (paramQueue)
 			{
-				if (data.symbolicSampleSize == kSample32)
-					fVuPPM = processAudio<Sample32> ((Sample32**)in, (Sample32**)out, numChannels,
-						data.numSamples, gain);
-				else
-					fVuPPM = processAudio<Sample64> ((Sample64**)in, (Sample64**)out, numChannels,
-						data.numSamples, gain);
+				int32 index2 = 0;
+				paramQueue->addPoint (0, fVuPPM, index2); 
 			}
 		}
+		fVuPPMOld = fVuPPM;
 	}
-
-	//---3) Write outputs parameter changes-----------
-	IParameterChanges* outParamChanges = data.outputParameterChanges;
-	// a new value of VuMeter will be send to the host
-	// (the host will send it back in sync to our controller for updating our editor)
-	if (outParamChanges && fVuPPMOld != fVuPPM)
-	{
-		int32 index = 0;
-		IParamValueQueue* paramQueue = outParamChanges->addParameterData (kVuPPMId, index);
-		if (paramQueue)
-		{
-			int32 index2 = 0;
-			paramQueue->addPoint (0, fVuPPM, index2);
-		}
-	}
-	fVuPPMOld = fVuPPM;
 
 	return kResultOk;
 }
@@ -418,13 +415,12 @@ tresult PLUGIN_API AGainSimple::setState (IBStream* state)
 		{
 			// get the current type (project/Default..) of this state
 			String128 string = {0};
-			if (list->getString (PresetAttributes::kStateType, string, 128 * sizeof (TChar)) ==
-			    kResultTrue)
+			if (list->getString (PresetAttributes::kStateType, string, 128 * sizeof (TChar)) == kResultTrue)
 			{
 				UString128 tmp (string);
 				char ascii[128];
 				tmp.toAscii (ascii, 128);
-				if (strncmp (ascii, StateType::kProject, strlen (StateType::kProject)) == 0)
+				if (!strncmp (ascii, StateType::kProject, strlen (StateType::kProject)))
 				{
 					// we are in project loading context...
 				}
@@ -433,8 +429,7 @@ tresult PLUGIN_API AGainSimple::setState (IBStream* state)
 			// get the full file path of this state
 			TChar fullPath[1024];
 			memset (fullPath, 0, 1024 * sizeof (TChar));
-			if (list->getString (PresetAttributes::kFilePathStringType, fullPath,
-			                     1024 * sizeof (TChar)) == kResultTrue)
+			if (list->getString (PresetAttributes::kFilePathStringType, fullPath, 1024 * sizeof (TChar)) == kResultTrue)
 			{
 				// here we have the full path ...
 			}
@@ -496,18 +491,16 @@ tresult PLUGIN_API AGainSimple::setBusArrangements (SpeakerArrangement* inputs, 
 				return kResultOk;
 			}
 		}
-		// the host wants something else than Mono => Mono, in this case we are always Stereo =>
-		// Stereo
+		// the host wants something else than Mono => Mono, in this case we are always Stereo => Stereo
 		else
 		{
 			auto* bus = FCast<AudioBus> (audioInputs.at (0));
 			if (bus)
 			{
 				tresult result = kResultFalse;
-
+				
 				// the host wants 2->2 (could be LsRs -> LsRs)
-				if (SpeakerArr::getChannelCount (inputs[0]) == 2 &&
-				    SpeakerArr::getChannelCount (outputs[0]) == 2)
+				if (SpeakerArr::getChannelCount (inputs[0]) == 2 && SpeakerArr::getChannelCount (outputs[0]) == 2)
 				{
 					bus->setArrangement (inputs[0]);
 					bus->setName (STR16 ("Stereo In"));
@@ -565,9 +558,10 @@ IPlugView* PLUGIN_API AGainSimple::createView (const char* name)
 }
 
 //------------------------------------------------------------------------
-tresult PLUGIN_API AGainSimple::getMidiControllerAssignment (int32 busIndex, int16 /*midiChannel*/,
-                                                             CtrlNumber midiControllerNumber,
-                                                             ParamID& tag)
+tresult PLUGIN_API AGainSimple::getMidiControllerAssignment (int32 busIndex,
+	int16 /*midiChannel*/,
+	CtrlNumber midiControllerNumber,
+	ParamID& tag)
 {
 	// we support for the Gain parameter all MIDI Channel but only first bus (there is only one!)
 	if (busIndex == 0 && midiControllerNumber == kCtrlVolume)

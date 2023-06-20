@@ -8,46 +8,45 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
-//
-//   * Redistributions of source code must retain the above copyright notice,
+// 
+//   * Redistributions of source code must retain the above copyright notice, 
 //     this list of conditions and the following disclaimer.
 //   * Redistributions in binary form must reproduce the above copyright notice,
-//     this list of conditions and the following disclaimer in the documentation
+//     this list of conditions and the following disclaimer in the documentation 
 //     and/or other materials provided with the distribution.
 //   * Neither the name of the Steinberg Media Technologies nor the names of its
-//     contributors may be used to endorse or promote products derived from this
+//     contributors may be used to endorse or promote products derived from this 
 //     software without specific prior written permission.
-//
+// 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
 // OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
 #include "again.h"
-#include "againcids.h" // for class ids
-#include "againparamids.h"
 #include "againprocess.h"
+#include "againparamids.h"
+#include "againcids.h"	// for class ids
 
 #include "public.sdk/source/vst/vstaudioprocessoralgo.h"
 #include "public.sdk/source/vst/vsthelpers.h"
 
 #include "pluginterfaces/base/ibstream.h"
-#include "pluginterfaces/base/ustring.h" // for UString128
+#include "pluginterfaces/base/ustring.h"	// for UString128
 #include "pluginterfaces/vst/ivstevents.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
-#include "pluginterfaces/vst/vstpresetkeys.h" // for use of IStreamAttributes
-
+#include "pluginterfaces/vst/vstpresetkeys.h"	// for use of IStreamAttributes
 #include "base/source/fstreamer.h"
 
 #include <cstdio>
@@ -128,18 +127,21 @@ tresult PLUGIN_API AGain::process (ProcessData& data)
 	// finally the process function
 	// In this example there are 4 steps:
 	// 1) Read inputs parameters coming from host (in order to adapt our model values)
-	// 2) Read inputs events coming from host (we apply a gain reduction depending of the velocity
-	// of pressed key) 3) Process the gain of the input buffer to the output buffer 4) Write the new
-	// VUmeter value to the output Parameters queue
+	// 2) Read inputs events coming from host (we apply a gain reduction depending of the velocity of pressed key)
+	// 3) Process the gain of the input buffer to the output buffer
+	// 4) Write the new VUmeter value to the output Parameters queue
+
 
 	//---1) Read inputs parameter changes-----------
-	if (IParameterChanges* paramChanges = data.inputParameterChanges)
+	IParameterChanges* paramChanges = data.inputParameterChanges;
+	if (paramChanges)
 	{
 		int32 numParamsChanged = paramChanges->getParameterCount ();
 		// for each parameter which are some changes in this audio block:
 		for (int32 i = 0; i < numParamsChanged; i++)
 		{
-			if (IParamValueQueue* paramQueue = paramChanges->getParameterData (i))
+			IParamValueQueue* paramQueue = paramChanges->getParameterData (i);
+			if (paramQueue)
 			{
 				ParamValue value;
 				int32 sampleOffset;
@@ -168,9 +170,10 @@ tresult PLUGIN_API AGain::process (ProcessData& data)
 			}
 		}
 	}
-
+	
 	//---2) Read input events-------------
-	if (IEventList* eventList = data.inputEvents)
+	IEventList* eventList = data.inputEvents;
+	if (eventList) 
 	{
 		int32 numEvent = eventList->getEventCount ();
 		for (int32 i = 0; i < numEvent; i++)
@@ -180,13 +183,13 @@ tresult PLUGIN_API AGain::process (ProcessData& data)
 			{
 				switch (event.type)
 				{
-					//--- -------------------
+					//----------------------
 					case Event::kNoteOnEvent:
 						// use the velocity as gain modifier
 						fGainReduction = event.noteOn.velocity;
 						break;
-
-					//--- -------------------
+					
+					//----------------------
 					case Event::kNoteOffEvent:
 						// noteOff reset the reduction
 						fGainReduction = 0.f;
@@ -195,10 +198,10 @@ tresult PLUGIN_API AGain::process (ProcessData& data)
 			}
 		}
 	}
-
-	//--- ----------------------------------
+		
+	//-------------------------------------
 	//---3) Process Audio---------------------
-	//--- ----------------------------------
+	//-------------------------------------
 	if (data.numInputs == 0 || data.numOutputs == 0)
 	{
 		// nothing to do
@@ -213,11 +216,10 @@ tresult PLUGIN_API AGain::process (ProcessData& data)
 	uint32 sampleFramesSize = getSampleFramesSizeInBytes (processSetup, data.numSamples);
 	void** in = getChannelBuffersPointer (processSetup, data.inputs[0]);
 	void** out = getChannelBuffersPointer (processSetup, data.outputs[0]);
-	float fVuPPM = 0.f;
 
 	//---check if silence---------------
-	// check if all channel are silent then process silent
-	if (data.inputs[0].silenceFlags == getChannelMask (data.inputs[0].numChannels))
+	// normally we have to check each channel (simplification)
+	if (data.inputs[0].silenceFlags != 0)
 	{
 		// mark output silence too (it will help the host to propagate the silence)
 		data.outputs[0].silenceFlags = data.inputs[0].silenceFlags;
@@ -233,59 +235,61 @@ tresult PLUGIN_API AGain::process (ProcessData& data)
 				memset (out[i], 0, sampleFramesSize);
 			}
 		}
-		fVuPPM = 0.f;
-	}
-	else // we have to process (no silence)
-	{
-		// mark our outputs has not silent
-		data.outputs[0].silenceFlags = 0;
 
-		//---in bypass mode outputs should be like inputs-----
-		if (bBypass)
+		// nothing to do at this point
+		return kResultOk;
+	}
+
+	// mark our outputs has not silent
+	data.outputs[0].silenceFlags = 0;
+
+	float fVuPPM = 0.f;
+
+	//---in bypass mode outputs should be like inputs-----
+	if (bBypass)
+	{
+		for (int32 i = 0; i < numChannels; i++)
+		{
+			// do not need to be copied if the buffers are the same
+			if (in[i] != out[i])
+			{
+				memcpy (out[i], in[i], sampleFramesSize);
+			}
+		}
+
+		if (data.symbolicSampleSize == kSample32)
+			fVuPPM = processVuPPM<Sample32> ((Sample32**)in, numChannels, data.numSamples);
+		else
+			fVuPPM = processVuPPM<Sample64> ((Sample64**)in, numChannels, data.numSamples);
+	}
+	else
+	{
+		//---apply gain factor----------
+		float gain = (fGain - fGainReduction);
+		if (bHalfGain)
+		{
+			gain = gain * 0.5f;
+		}
+
+		// if the applied gain is nearly zero, we could say that the outputs are zeroed and we set
+		// the silence flags.
+		if (gain < 0.0000001)
 		{
 			for (int32 i = 0; i < numChannels; i++)
 			{
-				// do not need to be copied if the buffers are the same
-				if (in[i] != out[i])
-				{
-					memcpy (out[i], in[i], sampleFramesSize);
-				}
+				memset (out[i], 0, sampleFramesSize);
 			}
-
-			if (data.symbolicSampleSize == kSample32)
-				fVuPPM = processVuPPM<Sample32> ((Sample32**)in, numChannels, data.numSamples);
-			else
-				fVuPPM = processVuPPM<Sample64> ((Sample64**)in, numChannels, data.numSamples);
+			// this will set to 1 all channels
+			data.outputs[0].silenceFlags = ((uint64)1 << numChannels) - 1;
 		}
 		else
 		{
-			//---apply gain factor----------
-			float gain = (fGain - fGainReduction);
-			if (bHalfGain)
-			{
-				gain = gain * 0.5f;
-			}
-
-			// if the applied gain is nearly zero, we could say that the outputs are zeroed and we set
-			// the silence flags.
-			if (gain < 0.0000001)
-			{
-				for (int32 i = 0; i < numChannels; i++)
-				{
-					memset (out[i], 0, sampleFramesSize);
-				}
-				// this will set to 1 all channels
-				data.outputs[0].silenceFlags = getChannelMask (data.outputs[0].numChannels);
-			}
+			if (data.symbolicSampleSize == kSample32)
+				fVuPPM = processAudio<Sample32> ((Sample32**)in, (Sample32**)out, numChannels,
+				                                 data.numSamples, gain);
 			else
-			{
-				if (data.symbolicSampleSize == kSample32)
-					fVuPPM = processAudio<Sample32> ((Sample32**)in, (Sample32**)out, numChannels,
-						data.numSamples, gain);
-				else
-					fVuPPM = processAudio<Sample64> ((Sample64**)in, (Sample64**)out, numChannels,
-						data.numSamples, gain);
-			}
+				fVuPPM = processAudio<Sample64> ((Sample64**)in, (Sample64**)out, numChannels,
+				                                 data.numSamples, gain);
 		}
 	}
 
@@ -417,7 +421,7 @@ tresult PLUGIN_API AGain::setBusArrangements (SpeakerArrangement* inputs, int32 
 				return kResultOk;
 			}
 		}
-		// the host wants something else than Mono => Mono,
+		// the host wants something else than Mono => Mono, 
 		// in this case we are always Stereo => Stereo
 		else
 		{

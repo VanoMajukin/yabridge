@@ -65,15 +65,12 @@ struct ObjCVariable
 
 	T get () const 
 	{
-		auto offset = ivar_getOffset (ivar);
-		return *reinterpret_cast<T*> (((__bridge uintptr_t)obj) + offset);
+		return (__bridge T) (reinterpret_cast<intptr_t> (object_getIvar (obj, ivar)));
 	}
 
 	void set (const T& value)
 	{
-		auto offset = ivar_getOffset (ivar);
-		auto storage = reinterpret_cast<T*> (((__bridge uintptr_t)obj) + offset);
-		*storage = value;
+		object_setIvar (obj, ivar, (__bridge id) reinterpret_cast<id> (value));
 	}
 
 private:
@@ -84,10 +81,7 @@ private:
 //------------------------------------------------------------------------------------
 struct ObjCInstance
 {
-	ObjCInstance (__unsafe_unretained id obj, Class superClass = nullptr) : obj (obj)
-	{
-		os.super_class = superClass;
-	}
+	ObjCInstance (__unsafe_unretained id obj) : obj (obj) {}
 
 	template<typename T>
 	std::optional<ObjCVariable<T>> getVariable (const char* name) const
@@ -122,9 +116,6 @@ private:
 		if (os.receiver == nullptr)
 		{
 			os.receiver = obj;
-		}
-		if (os.super_class == nullptr)
-		{
 			os.super_class = class_getSuperclass (object_getClass (obj));
 		}
 		return (__bridge id) (&os);

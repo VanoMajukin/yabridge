@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -38,7 +38,6 @@
 
 #include "public.sdk/source/vst/vsteditcontroller.h"
 #include "vstgui/vstgui.h"
-#include <string>
 
 namespace VSTGUI {
 
@@ -82,7 +81,7 @@ public:
 	int32_t dbOnKeyDown (const VstKeyCode& key, CDataBrowser* browser) SMTG_OVERRIDE;
 
 protected:
-	void getPitchName (int16_t pitch, std::string& name);
+	void getPitchName (int16_t pitch, Steinberg::String& name);
 
 	Steinberg::Vst::ProgramListWithPitchNames* pitchnames;
 };

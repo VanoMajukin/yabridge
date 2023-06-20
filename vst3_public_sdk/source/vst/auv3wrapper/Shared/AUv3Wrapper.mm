@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -450,15 +450,15 @@ tresult PLUGIN_API ComponentHelper::restartComponent (int32 flags)
 
 	if (flags & kParamValuesChanged)
 	{
-		// vst plugin parameter values have changed
+		// vst plugin parameter names (titles) have changed
 		[auv3Wrapper syncParameterValues];
 		result = kResultTrue;
 	}
 
 	if (flags & kParamTitlesChanged)
 	{
-		// vst plugin parameter titles, default values or flags (ParameterFlags) have changed
-		[auv3Wrapper onParamTitlesChanged];
+		// vst plugin parameter values have changed
+		[auv3Wrapper initializeParameters];
 		result = kResultTrue;
 	}
 
@@ -469,7 +469,6 @@ tresult PLUGIN_API ComponentHelper::restartComponent (int32 flags)
 
 	if (flags & kLatencyChanged)
 	{
-		[auv3Wrapper onLatencyChanged];
 		result = kResultTrue;
 	}
 
@@ -955,7 +954,7 @@ using namespace Vst;
 	[self initializeBusses];
 
 	// initialize parameters
-	[self updateParameters];
+	[self initializeParameters];
 
 	// initialize presets
 	[self loadPresetList];
@@ -1322,37 +1321,16 @@ using namespace Vst;
 	}
 }
 
-- (void)onLatencyChanged
-{
-	[self willChangeValueForKey:@"latency"];
-	[self didChangeValueForKey:@"latency"];
-}
-
 //------------------------------------------------------------------------
-- (void)onParamTitlesChanged
+- (void)initializeParameters
 {
-	[self willChangeValueForKey:@"parameterTree"];
-	[self updateParameters];
-	[self didChangeValueForKey:@"parameterTree"];
-}
-
-//------------------------------------------------------------------------
-- (void)updateParameters
-{
-	BOOL initParams = overviewParams ? NO : YES;
-	if (parameterTreeVar && parameterObserverToken != nullptr)
-	{
-		[parameterTreeVar removeParameterObserver:parameterObserverToken];
-		parameterObserverToken = nullptr;
-	}
-
 	// AUv3 Parameter Initialization
 	overviewParams = [[NSMutableArray<NSNumber*> alloc] init];
 	NSMutableArray* paramArray = [[NSMutableArray alloc] init];
 	NSMutableArray* paramArrayWithHierarchy = [[NSMutableArray<AUParameter*> alloc] init];
 
 	// create parameters
-	[self createParameters:paramArrayWithHierarchy paramArray:paramArray initParams:initParams];
+	[self createParameters:paramArrayWithHierarchy paramArray:paramArray];
 
 	// create the paramArray with AUParameterGroups
 	for (int32 i = 0; i < [paramArrayWithHierarchy count]; i++)
@@ -1412,7 +1390,6 @@ using namespace Vst;
 //------------------------------------------------------------------------
 - (void)createParameters:(NSMutableArray*)paramArrayWithHierarchy
               paramArray:(NSMutableArray*)paramArray
-              initParams:(BOOL)initParams
 {
 	// for each VST3 parameter
 	int32 parameterCount = _editcontroller->getParameterCount ();
@@ -1462,17 +1439,10 @@ using namespace Vst;
 			                                      valueStrings:nil
 			                               dependentParameters:nil];
 
-			if (initParams)
-			{
-				// initialize the parameter values
-				sPar.value = pi.defaultNormalizedValue;
-				[self setParameter:pi.id value:pi.defaultNormalizedValue];
-				[self setControllerParameter:pi.id value:pi.defaultNormalizedValue];
-			}
-			else
-			{
-				sPar.value = _editcontroller->getParamNormalized (pi.id);
-			}
+			// initialize the parameter values
+			sPar.value = pi.defaultNormalizedValue;
+			[self setParameter:pi.id value:pi.defaultNormalizedValue];
+			[self setControllerParameter:pi.id value:pi.defaultNormalizedValue];
 
 			// add parameter to the paramArrayWithHierarchy (with hierarchy/AUParameterGroups)
 			while ([paramArrayWithHierarchy count] <= groupIdx)
