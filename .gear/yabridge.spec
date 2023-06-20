@@ -1,6 +1,6 @@
 Name: yabridge
 Version: 5.0.5
-Release: 1
+Release: alt1
 
 Summary: Bridge to use Windows audio plugins on Linux
 
@@ -53,7 +53,7 @@ BuildRequires: cmake
 Requires: wine
 
 %description
-Yet Another way to use Windows audio plugins on Linux. Yabridge seamlessly supports using both 32-bit and 64-bit Windows VST2, VST3, and CLAP plugins in 64-bit Linux plugin hosts as if they were native plugins, with optional support for plugin groups to enable inter-plugin communication for VST2 plugins and quick startup times. Its modern concurrent architecture and focus on transparency allows yabridge to be both fast and highly compatible, while also staying easy to debug and maintain.
+Yet Another way to use Windows audio plugins on Linux. Yabridge seamlessly supports using 64-bit Windows VST2, VST3, and CLAP plugins in 64-bit Linux plugin hosts as if they were native plugins, with optional support for plugin groups to enable inter-plugin communication for VST2 plugins and quick startup times. Its modern concurrent architecture and focus on transparency allows yabridge to be both fast and highly compatible, while also staying easy to debug and maintain.
 
 %prep
 %setup -a2 -a3 -a4 -a5 -a6 -a7 -a8 -a9 -a10 -a11
@@ -80,9 +80,5 @@ install libyabridge{,-chainloader}-{vst2,vst3,clap}.so %buildroot/usr/lib
 %_libexecdir/libyabridge-*
 
 %changelog
-* Tue Jun 20 2023 Ivan Mazhukin <vanomj@altlinux.org> 5.0.5-1
-- new version
-
-* Fri Jun 16 2023 Ivan Mazhukin <vanomj@altlinux.org> 5.0.5-alt1
+* Tue Jun 20 2023 Ivan Mazhukin <vanomj@altlinux.org> 5.0.5-alt1
 - Initial build for Sisyphus
-
