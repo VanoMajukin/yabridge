@@ -30,8 +30,8 @@ Source6: filesystem-v1.5.12.tar
 # Source7-url: https://github.com/marzer/tomlplusplus/archive/refs/tags/v3.3.0.tar.gz
 Source7: tomlplusplus-v3.3.0.tar
 
-# Source8-url: https://github.com/robbert-vdh/vst3sdk.git
-Source8: vst3sdk-%version.tar
+# Source8-url: https://github.com/robbert-vdh/vst3sdk/archive/refs/tags/v3.7.7_build_19-patched.tar.gz
+Source8: vst3sdk-v3.7.7_build_19-patched.tar
 
 # Source9-url: https://github.com/steinbergmedia/vst3_base/archive/refs/tags/v3.7.7_build_19.tar.gz
 Source9: vst3_base-v3.7.7_build_19.tar
