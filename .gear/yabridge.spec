@@ -1,6 +1,6 @@
 Name: yabridge
 Version: 5.0.5
-Release: alt1
+Release: 1
 
 Summary: Bridge to use Windows audio plugins on Linux
 
@@ -18,6 +18,30 @@ Source2: asio-1.22.1.tar
 # Source3-url: https://github.com/fraillt/bitsery/archive/refs/tags/v5.2.2.tar.gz
 Source3: bitsery-v5.2.2.tar
 
+# Source4-url: https://github.com/free-audio/clap/archive/refs/tags/1.1.7.tar.gz
+Source4: clap-1.1.7.tar
+
+# Source5-url: https://github.com/Naios/function2/archive/refs/tags/4.2.0.tar.gz
+Source5: function2-4.2.0.tar
+
+# Source6-url: https://github.com/gulrak/filesystem/archive/refs/tags/v1.5.12.tar.gz
+Source6: filesystem-v1.5.12.tar
+
+# Source7-url: https://github.com/marzer/tomlplusplus/archive/refs/tags/v3.3.0.tar.gz
+Source7: tomlplusplus-v3.3.0.tar
+
+# Source8-url: https://github.com/robbert-vdh/vst3sdk.git
+Source8: vst3sdk-%version.tar
+
+# Source9-url: https://github.com/steinbergmedia/vst3_base.git
+Source9: vst3_base-%version.tar
+
+# Source10-url: https://github.com/steinbergmedia/vst3_pluginterfaces.git
+Source10:vst3_pluginterfaces-%version.tar
+
+# Source11-url: https://github.com/steinbergmedia/vst3_public_sdk.git
+Source11:vst3_public_sdk-%version.tar
+
 BuildRequires(pre): rpm-macros-meson
 BuildRequires: meson
 BuildRequires: wine-devel-tools
@@ -33,8 +57,9 @@ Requires: wine
 Yet Another way to use Windows audio plugins on Linux. Yabridge seamlessly supports using both 32-bit and 64-bit Windows VST2, VST3, and CLAP plugins in 64-bit Linux plugin hosts as if they were native plugins, with optional support for plugin groups to enable inter-plugin communication for VST2 plugins and quick startup times. Its modern concurrent architecture and focus on transparency allows yabridge to be both fast and highly compatible, while also staying easy to debug and maintain.
 
 %prep
-%setup -a2 -a3
-# cp -rf subprojects/packagefiles/asio subprojects/
+%setup -a2 -a3 -a4 -a5 -a6 -a7 -a8 -a9 -a10 -a11
+cp -rf subprojects/packagefiles/* subprojects/
+
 %build
 
 meson setup build --buildtype=release --cross-file=cross-wine.conf --unity=on --unity-size=4000
