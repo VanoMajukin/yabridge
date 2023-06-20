@@ -7,7 +7,7 @@ tar: clap name=clap-1.1.7 base=subprojects/clap
 tar: function2 name=function2-4.2.0 base=subprojects/function2
 tar: filesystem name=filesystem-v1.5.12 base=subprojects/ghc_filesystem
 tar: tomlplusplus name=tomlplusplus-v3.3.0 base=subprojects/tomlplusplus
-tar: vst3_base name=vst3_base-v3.7.7_build_19.tar base=subprojects/vst3/base
-tar: vst3_pluginterfaces name=vst3_pluginterfaces-v3.7.7_build_19.tar base=subprojects/vst3/pluginterfaces
-tar: vst3_public_sdk name=vst3_public_sdk-v3.7.7_build_19.tar base=subprojects/vst3/public.sdk
+tar: vst3_base name=vst3_base-v3.7.7_build_19 base=subprojects/vst3/base
+tar: vst3_pluginterfaces name=vst3_pluginterfaces-v3.7.7_build_19 base=subprojects/vst3/pluginterfaces
+tar: vst3_public_sdk name=vst3_public_sdk-v3.7.7_build_19 base=subprojects/vst3/public.sdk
 tar: vst3sdk name=vst3sdk-v3.7.7_build_19-patched base=subprojects/vst3
